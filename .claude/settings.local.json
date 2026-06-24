@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(conda run *)",
+      "Bash(bash -c 'source /home/atec/anaconda3/etc/profile.d/conda.sh && conda activate ATEC_use && python -c \"import isaaclab; print\\(\\\\\"OK\\\\\"\\)\"')",
+      "Bash(# 检查 conda init 状态 *)",
+      "Read(//home/atec/**)",
+      "Bash(python -c \"import isaaclab; print\\(isaaclab.__version__\\)\")",
+      "Bash(nvidia-smi)",
+      "Bash(conda env *)"
+    ]
+  }
+}
