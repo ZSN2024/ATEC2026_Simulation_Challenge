@@ -29,10 +29,16 @@ class AlgSolution:
         # ---- Load policy for locomotion (Task A) ----
         policy_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "policy.pt")
         if os.path.exists(policy_path):
-            print(f"[solution] Loading JIT policy: {policy_path}")
-            self.policy = torch.jit.load(policy_path, map_location=self.device)
-            self.policy.eval()
-            self._use_raw_ckpt = False
+            # Auto-detect: try JIT first, fall back to raw checkpoint
+            try:
+                self.policy = torch.jit.load(policy_path, map_location=self.device)
+                self.policy.eval()
+                self._use_raw_ckpt = False
+                print(f"[solution] Loaded JIT policy: {policy_path}")
+            except Exception:
+                print(f"[solution] JIT load failed, trying raw checkpoint: {policy_path}")
+                self._load_raw_checkpoint(policy_path)
+                self._use_raw_ckpt = True
         elif (raw_ckpt := self._find_latest_checkpoint()) is not None:
             print(f"[solution] Loading raw checkpoint: {raw_ckpt}")
             self._load_raw_checkpoint(raw_ckpt)
@@ -260,7 +266,7 @@ class AlgSolution:
             policy_obs = self._extract_policy_obs(obs, action_dim)
             with torch.inference_mode():
                 if self._use_raw_ckpt:
-                    leg_action = self._actor_model({"policy": policy_obs}, obs_set="actor")
+                    leg_action = self._actor_model({"policy": policy_obs})
                 else:
                     leg_action = self.policy(policy_obs)
             if not isinstance(leg_action, torch.Tensor):
@@ -304,7 +310,7 @@ class AlgSolution:
         policy_obs = self._extract_policy_obs(obs, action_dim)
         with torch.inference_mode():
             if self._use_raw_ckpt:
-                action_train = self._actor_model({"policy": policy_obs}, obs_set="actor")
+                action_train = self._actor_model({"policy": policy_obs})
             else:
                 action_train = self.policy(policy_obs)
 
@@ -347,7 +353,7 @@ class AlgSolution:
         policy_obs = self._extract_policy_obs(obs, action_dim)
         with torch.inference_mode():
             if self._use_raw_ckpt:
-                action_train = self._actor_model({"policy": policy_obs}, obs_set="actor")
+                action_train = self._actor_model({"policy": policy_obs})
             else:
                 action_train = self.policy(policy_obs)
 
