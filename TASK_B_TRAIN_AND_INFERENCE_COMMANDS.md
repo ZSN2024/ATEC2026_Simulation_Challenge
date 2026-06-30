@@ -106,7 +106,7 @@ ls -lh logs/rsl_rl/task_b_vwc_stage1/2026-06-29_18-34-28/model_*.pt
 ```bash
 python scripts/task_b_vwc_stage1/play_stage1.py \
   --task ATEC-TaskB-B2wPiper-VWC-Stage1-v0 \
-  --checkpoint /home/atec/ATEC2026_Simulation_Challenge/logs/rsl_rl/task_b_vwc_stage1/2026-06-30_10-57-44/model_8000.pt \
+  --checkpoint  /home/atec/ATEC2026_Simulation_Challenge/logs/rsl_rl/task_b_vwc_stage1/2026-06-30_19-07-12/model_9400.pt \
   --num_envs 30 \
   --print_metrics \
   --print_interval 50 \

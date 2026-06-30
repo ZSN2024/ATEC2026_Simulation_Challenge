@@ -1,0 +1,1 @@
+ssh skill remote write test

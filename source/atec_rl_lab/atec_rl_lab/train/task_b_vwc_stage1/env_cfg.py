@@ -25,9 +25,9 @@ class _TaskBVwcStage1EnvMixin:
         self.observations = ObservationsCfg()
         self.rewards = RewardsCfg()
         if self.base_height_target is None:
-            self.rewards.base_height_l2.params["target_height"] = float(self.scene.robot.init_state.pos[2])
+            self.rewards.adaptive_base_height_l2.params["standing_height"] = float(self.scene.robot.init_state.pos[2])
         else:
-            self.rewards.base_height_l2.params["target_height"] = self.base_height_target
+            self.rewards.adaptive_base_height_l2.params["standing_height"] = self.base_height_target
 
         joint_names = self.scene.robot.joint_names
         self.observations.policy.policy.params["asset_cfg"].joint_names = joint_names
