@@ -1,0 +1,31 @@
+{
+  "action_dim": 16,
+  "base_command_dim": 3,
+  "ee_goal_dim": 3,
+  "ee_goal_orientation_dim": 3,
+  "history_length": 10,
+  "joint_order_source": "official_task_b_proprio_joint_order",
+  "obs_scale": {
+    "base_ang_vel": 1.0,
+    "base_velocity_command": 1.0,
+    "ee_goal_pos": 1.0,
+    "ee_goal_rpy": 1.0,
+    "joint_pos": 1.0,
+    "joint_vel": 1.0,
+    "last_action": 1.0,
+    "projected_gravity": 1.0
+  },
+  "official_action_dim": 24,
+  "official_joint_count": 24,
+  "policy_action_order": [
+    "leg",
+    "wheel"
+  ],
+  "policy_joint_count": 16,
+  "policy_obs_dim": 869,
+  "policy_obs_order": [
+    "current: base_ang_vel, projected_gravity, base_velocity_command, ee_goal_pos, ee_goal_rpy, joint_pos, joint_vel, last_action",
+    "history[10]: previous current-policy observations, oldest to newest"
+  ],
+  "single_policy_obs_dim": 79
+}
