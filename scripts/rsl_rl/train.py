@@ -118,11 +118,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
         args_cli.max_iterations if args_cli.max_iterations is not None else agent_cfg.max_iterations
     )
 
-    # Handle deprecated rsl-rl config migration (policy → actor/critic, stochastic → distribution_cfg)
-    from isaaclab_rl.rsl_rl import handle_deprecated_rsl_rl_cfg
-    import importlib.metadata as metadata
-    agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, metadata.version("rsl-rl-lib"))
-
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here
     env_cfg.seed = agent_cfg.seed
@@ -220,43 +215,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     print(f"Training time: {round(time.time() - start_time, 2)} seconds")
 
-    # ── Export JIT policy.pt (same format as official baseline) ──────────
-    _export_jit_policy(runner, log_dir)
-
     # close the simulator
     env.close()
-
-
-def _export_jit_policy(runner, log_dir: str) -> None:
-    """Export trained actor as JIT policy.pt after training completes."""
-    import torch
-
-    # Get actor from PPO algorithm
-    alg = runner.alg
-    if hasattr(alg, "actor"):
-        actor = alg.actor
-    elif hasattr(alg, "get_policy"):
-        actor = alg.get_policy()
-    else:
-        print("[WARNING] Cannot find actor model, skipping JIT export.")
-        return
-
-    class PolicyWrapper(torch.nn.Module):
-        def __init__(self, model):
-            super().__init__()
-            self._model = model
-
-        def forward(self, obs):
-            return self._model({"policy": obs})
-
-    wrapper = PolicyWrapper(actor)
-    example_input = torch.zeros(1, 45, device=actor.mlp[0].weight.device)
-    traced = torch.jit.trace(wrapper, example_input)
-
-    output_path = os.path.join(log_dir, "policy.pt")
-    torch.jit.save(traced, output_path)
-    size_kb = os.path.getsize(output_path) / 1024
-    print(f"[INFO] Exported JIT policy: {output_path} ({size_kb:.1f} KB)")
 
 
 if __name__ == "__main__":

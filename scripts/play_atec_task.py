@@ -6,10 +6,12 @@ import sys
 import time
 import json
 
-# Add project root to sys.path (Isaac Sim AppLauncher may change cwd)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 from isaaclab.app import AppLauncher
+
+# Isaac Lab AppLauncher may change CWD – ensure the project root is on sys.path
+_PROJ_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _PROJ_ROOT not in sys.path:
+    sys.path.insert(0, _PROJ_ROOT)
 
 # -----------------------------------------------------------------------------
 # CLI
@@ -77,17 +79,22 @@ def play() -> tuple[float, float]:
         use_fabric=not args_cli.disable_fabric
     )
 
-    # Get action spec from solution (dict, None, or JSON string are all supported)
+    # TODO: simulate getting action spec from jason string (e.g. from a file or network)
     action_spec = solution.get_action_spec() if hasattr(solution, "get_action_spec") else None
+    action_spec_json = json.dumps(action_spec)
 
     # New Feature: apply safe action spec to env config (e.g. for scaling/clipping actions from your solution)
-    env_cfg = apply_safe_action_spec(env_cfg, action_spec)
+    env_cfg = apply_safe_action_spec(env_cfg, action_spec_json)
     
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
 
     # Convert MARL -> single agent if needed (kept from your original script)
     if isinstance(env.unwrapped, DirectMARLEnv):
         env = multi_agent_to_single_agent(env)
+
+    # Inject env into solution so it can access robot/scene internals
+    if hasattr(solution, "set_env"):
+        solution.set_env(env.unwrapped)
 
     # -------------------------------------------------------------------------
     # Optional: video wrapper
@@ -109,6 +116,10 @@ def play() -> tuple[float, float]:
     # Reset
     # -------------------------------------------------------------------------
     obs, _ = env.reset()
+
+    # Notify solution of env reset (for IK state, FSM reset, etc.)
+    if hasattr(solution, "on_env_reset"):
+        solution.on_env_reset()
 
     dt = env.unwrapped.step_dt if hasattr(env.unwrapped, "step_dt") else None
     timestep = 0
@@ -151,6 +162,9 @@ def play() -> tuple[float, float]:
 
             done = (terminated.item() or truncated.item())
             if done:
+                print(f"\n[Terminated] step={timestep}, terminated={terminated.item()}, truncated={truncated.item()}")
+                if "Episode_Score" in info:
+                    print(f"[Terminated] Episode_Score={info['Episode_Score']}")
                 break
 
             timestep += 1

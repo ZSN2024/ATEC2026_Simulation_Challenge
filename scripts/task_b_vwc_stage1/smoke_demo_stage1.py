@@ -28,7 +28,7 @@ import gymnasium as gym  # noqa: E402
 import torch  # noqa: E402
 
 import atec_rl_lab.tasks  # noqa: F401, E402
-from demo.taskb_stage1.solution_stage1 import AlgSolution  # noqa: E402
+from temp.demo.taskb_stage1.solution_stage1 import AlgSolution  # noqa: E402
 from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
 
 

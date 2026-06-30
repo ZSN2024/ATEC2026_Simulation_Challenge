@@ -90,11 +90,6 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     agent_cfg: RslRlBaseRunnerCfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
     env_cfg.scene.num_envs = args_cli.num_envs if args_cli.num_envs is not None else 64
 
-    # Handle deprecated rsl-rl config migration (policy → actor/critic, stochastic → distribution_cfg)
-    from isaaclab_rl.rsl_rl import handle_deprecated_rsl_rl_cfg
-    import importlib.metadata as metadata
-    agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, metadata.version("rsl-rl-lib"))
-
     # set the environment seed
     # note: certain randomizations occur in the environment initialization so we set the seed here
     env_cfg.seed = agent_cfg.seed
@@ -171,21 +166,16 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     policy = runner.get_inference_policy(device=env.unwrapped.device)
 
     # extract the neural network module
-    # The exporter expects an object with .actor attribute (e.g., the PPO algorithm).
-    # For rsl-rl >= 5.0: runner.alg has actor/critic attributes directly.
-    # For rsl-rl < 5.0: runner.alg had .policy or .actor_critic.
-    policy_nn = runner.alg
-    if not hasattr(policy_nn, "actor"):
-        # rsl-rl < 5.0: try deprecated attributes
-        if hasattr(policy_nn, "policy"):
-            policy_nn = policy_nn.policy
-        elif hasattr(policy_nn, "actor_critic"):
-            policy_nn = policy_nn.actor_critic
+    # we do this in a try-except to maintain backwards compatibility.
+    try:
+        # version 2.3 onwards
+        policy_nn = runner.alg.policy
+    except AttributeError:
+        # version 2.2 and below
+        policy_nn = runner.alg.actor_critic
 
-    # extract the normalizer from the actor model
-    if hasattr(policy_nn, "actor") and hasattr(policy_nn.actor, "obs_normalizer"):
-        normalizer = policy_nn.actor.obs_normalizer
-    elif hasattr(policy_nn, "actor_obs_normalizer"):
+    # extract the normalizer
+    if hasattr(policy_nn, "actor_obs_normalizer"):
         normalizer = policy_nn.actor_obs_normalizer
     elif hasattr(policy_nn, "student_obs_normalizer"):
         normalizer = policy_nn.student_obs_normalizer
