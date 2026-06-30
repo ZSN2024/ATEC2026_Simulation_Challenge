@@ -2,6 +2,7 @@
 # copy from btx0424
 from __future__ import annotations
 
+import logging
 import trimesh
 import numpy as np
 from isaaclab.terrains import (
@@ -18,6 +19,9 @@ from isaaclab.sim.spawners.from_files import spawn_ground_plane
 from isaaclab.sim.spawners import materials
 
 from atec_rl_lab.assets import ATEC_ASSETS_MODEL_DIR
+
+
+logger = logging.getLogger(__name__)
 
 class BetterTerrainImporter(TerrainImporter):
     def __init__(self, cfg: TerrainImporterCfg):
