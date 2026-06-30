@@ -67,6 +67,7 @@ _build
 
 # Pre-Trained Checkpoints
 /.pretrained_checkpoints/
+demo/taskb_stage1/policy.pt
 
 # Teleop Recorded Dataset
 /datasets/
@@ -80,4 +81,3 @@ tests/
 # TacSL sensor
 **/tactile_record/*
 **/gelsight_r15_data/*
-
